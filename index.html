@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Compass · Offer Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+  :root{--ink:#0A0A0A;--ink-soft:#3A3A38;--muted:#767671;--paper:#FFFFFF;--panel:#F6F6F3;--panel-2:#FAFAF8;--hair:#E4E4E0;--ok:#1F5E3D;--warn:#8A5A00;--flag:#8A2318;--maxw:1180px;}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Archivo',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--panel);-webkit-font-smoothing:antialiased;line-height:1.45}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+  .topbar{position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:1px solid var(--hair)}
+  .topbar-inner{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;padding-top:max(14px,env(safe-area-inset-top))}
+  .wordmark{font-weight:700;letter-spacing:.42em;font-size:14px;text-transform:uppercase;padding-left:.42em}
+  .status-chip{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--hair);display:inline-block}
+  .status-chip.ready .dot{background:var(--ok)} .status-chip.ready{color:var(--ok)}
+  .switch{display:none;max-width:var(--maxw);margin:0 auto;padding:12px 20px 0}
+  .switch-track{display:flex;background:var(--paper);border:1px solid var(--hair);border-radius:2px;overflow:hidden}
+  .switch-track button{flex:1;appearance:none;border:0;background:transparent;font-family:inherit;font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:12px 8px;cursor:pointer}
+  .switch-track button[aria-selected="true"]{background:var(--ink);color:#fff}
+  .grid{max-width:var(--maxw);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;padding:24px 20px 120px;align-items:start}
+  @media (max-width:920px){.grid{grid-template-columns:1fr;padding-top:16px}.switch{display:block}.col-preview.hide-mobile{display:none}.col-form.hide-mobile{display:none}}
+  section.card{background:var(--paper);border:1px solid var(--hair);border-radius:2px;margin-bottom:16px;overflow:hidden}
+  .card-head{display:flex;align-items:baseline;gap:12px;padding:16px 18px 6px}
+  .card-num{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);font-variant-numeric:tabular-nums}
+  .card-title{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+  .card-head .spacer{flex:1}
+  .card-body{padding:6px 18px 18px}
+  .hint{font-size:12px;color:var(--muted);margin:2px 0 14px;line-height:1.5}
+  .field{margin-bottom:13px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:460px){.row2.stack{grid-template-columns:1fr}}
+  label.lab{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  .lab-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .lab-row .lab{margin:0}
+  input,select,textarea{width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:var(--panel-2);border:1px solid var(--hair);border-radius:2px;padding:11px 12px;appearance:none;outline:none;transition:border-color .12s,background .12s}
+  textarea{resize:vertical;min-height:60px;line-height:1.5}
+  input:focus,select:focus,textarea:focus{border-color:var(--ink);background:#fff;box-shadow:0 0 0 2px rgba(10,10,10,.06)}
+  input::placeholder,textarea::placeholder{color:#B4B4AE}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{appearance:none;font-family:inherit;font-size:12.5px;font-weight:600;padding:9px 12px;border:1px solid var(--hair);background:var(--panel-2);border-radius:2px;cursor:pointer;color:var(--ink-soft)}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .info-btn{appearance:none;width:16px;height:16px;border-radius:50%;border:1px solid var(--hair);background:var(--panel-2);color:var(--muted);font-size:10px;font-weight:700;font-family:Georgia,serif;font-style:italic;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .info-btn:hover{border-color:var(--ink);color:var(--ink)}
+  .tip{display:none;font-size:11.5px;line-height:1.55;color:var(--ink-soft);background:var(--panel);border:1px solid var(--hair);border-left:2px solid var(--ink);border-radius:2px;padding:9px 11px;margin:0 0 12px}
+  .tip.show{display:block} .tip b{font-weight:700}
+  .tip .tt{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .inline-note{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--muted);line-height:1.5;background:var(--panel);border:1px solid var(--hair);border-radius:2px;padding:10px 12px;margin-top:4px}
+  .inline-note svg{flex:none;margin-top:1px}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;cursor:pointer;font-size:12.5px;line-height:1.45;color:var(--ink-soft)}
+  .check input{-webkit-appearance:auto;appearance:auto;width:18px;height:18px;flex:none;margin-top:1px;padding:0;border:0;border-radius:0;background:none;accent-color:#0A0A0A;cursor:pointer}
+  .sub{margin-bottom:14px} .sub-lab{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  .optrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 10px}
+  .prefill{background:var(--panel);border:1px solid var(--hair);border-radius:2px;padding:11px 12px;margin-bottom:14px}
+  .prefill-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .prefill-row{display:flex;gap:8px} .prefill-row input{flex:1}
+  .prefill-btn{appearance:none;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:0 16px;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:2px;cursor:pointer;white-space:nowrap}
+  .prefill-btn:hover{opacity:.86}
+  .prefill-skip{appearance:none;border:0;background:none;font-family:inherit;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:2px;white-space:nowrap}
+  .prefill-skip:hover{color:var(--ink)}
+  .prefill-msg{font-size:11.5px;line-height:1.5;margin-top:8px;color:var(--muted)}
+  .prefill-msg.ok{color:var(--ok)} .prefill-msg.err{color:var(--flag)}
+  .prefill-collapsed{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--hair);border-radius:2px;padding:9px 12px;margin-bottom:14px}
+  .prefill-collapsed span{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+  .prefill-reopen{appearance:none;border:0;background:none;font-family:inherit;font-size:11px;font-weight:700;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:2px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .beta{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#fff;background:#9A7B00;border-radius:2px;padding:2px 6px;margin-left:8px;vertical-align:middle}
+  .soon-chip{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#fff;background:var(--ink);border-radius:2px;padding:4px 8px;white-space:nowrap}
+  .soon-teaser{padding:2px 18px 16px;font-size:12px;color:var(--muted);line-height:1.5}
+  .drop{border:1.5px dashed var(--hair);border-radius:2px;background:var(--panel-2);padding:20px 16px;text-align:center;cursor:pointer;transition:border-color .12s,background .12s}
+  .drop:hover,.drop.drag{border-color:var(--ink);background:#fff}
+  .drop strong{font-size:13.5px;font-weight:700} .drop span{display:block;font-size:11.5px;color:var(--muted);margin-top:4px}
+  .slots{margin-top:2px}
+  .slot{border:1px solid var(--hair);border-radius:2px;margin-bottom:8px;background:var(--panel-2);overflow:hidden;transition:border-color .12s,background .12s}
+  .slot.drag{border-color:var(--ink);background:#fff}
+  .slot-head{display:flex;align-items:center;gap:10px;padding:11px 12px}
+  .slot-tick{width:17px;height:17px;border-radius:3px;border:1.4px solid var(--hair);flex:none;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:800}
+  .slot-tick.on{background:var(--ok);border-color:var(--ok)}
+  .slot-name{flex:1;font-size:12.5px;font-weight:600;letter-spacing:.02em}
+  .slot-name .req{color:var(--muted);font-weight:500;font-size:10.5px;margin-left:6px;text-transform:none;letter-spacing:0}
+  .slot-add{appearance:none;border:1px solid var(--ink);background:#fff;color:var(--ink);font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer}
+  .slot-add:hover{background:var(--ink);color:#fff}
+  .slot-files{padding:0 12px 6px}
+  .filerow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--hair)}
+  .filerow input{flex:1;font-size:13px;padding:8px 10px}
+  .fileicon{font-size:10px;color:var(--muted);white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis}
+  .fbtn{appearance:none;border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:4px 5px} .fbtn:hover{color:var(--ink)}
+  .doc{border:1px solid var(--hair);border-radius:2px;margin-top:12px;padding:12px;background:var(--panel-2)}
+  .doc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+  .doc-orig{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .doc-x{appearance:none;border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px} .doc-x:hover{color:var(--ink)}
+  .doc-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:9px}
+  @media (max-width:460px){.doc-grid{grid-template-columns:1fr}}
+  .doc-dl{margin-top:9px;width:100%;appearance:none;font-family:inherit;font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:9px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:2px;cursor:pointer}
+  .doc-dl:hover{background:var(--ink);color:#fff}
+  .actions{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .btn{appearance:none;font-family:inherit;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:15px 16px;border-radius:2px;cursor:pointer;border:1px solid var(--ink);transition:opacity .12s,background .12s,color .12s}
+  .btn-primary{background:var(--ink);color:#fff} .btn-primary:hover{opacity:.86}
+  .btn-ghost{background:#fff;color:var(--ink)} .btn-ghost:hover{background:var(--ink);color:#fff}
+  .btn:disabled{opacity:.4;cursor:not-allowed} .btn-ghost:disabled:hover{background:#fff;color:var(--ink)} .btn-primary:disabled:hover{background:var(--ink);color:#fff}
+  .col-preview{position:sticky;top:88px}
+  @media (max-width:920px){.col-preview{position:static}}
+  .sheet{background:#fff;border:1px solid var(--hair);border-radius:2px;padding:40px 40px 30px;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+  @media (max-width:520px){.sheet{padding:28px 24px 24px}}
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+  .sheet-mark{font-weight:700;letter-spacing:.4em;font-size:13px;text-transform:uppercase;padding-left:.4em}
+  .sheet-eyebrow{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right}
+  .sheet-rule{height:1px;background:var(--ink);margin:0 0 22px}
+  .sheet-addr{font-size:27px;font-weight:800;line-height:1.12;letter-spacing:-.01em;margin:0 0 6px}
+  @media (max-width:520px){.sheet-addr{font-size:22px}}
+  .sheet-sub{font-size:12.5px;color:var(--muted);margin-bottom:26px}
+  .hdr-lab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:3px}
+  .hdr-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0 20px;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+  .hdr-val{font-size:13px;font-weight:600;color:var(--ink)}
+  .spec-item.strong{background:var(--panel);border-left:3px solid var(--ink);padding-left:9px}
+  .spec-item.strong .spec-k{color:var(--ink);font-weight:700}
+  .spec-item.strong .spec-v{font-weight:800;font-size:14px;color:var(--ink)}
+  .sheet-price-lab{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+  .sheet-price{font-size:34px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-bottom:6px}
+  @media (max-width:520px){.sheet-price{font-size:28px}}
+  .sheet-price.mut{color:#C4C4BE}
+  .sheet-priceref{font-size:11px;color:var(--muted);margin-bottom:22px}
+  .spec-title{background:var(--panel);padding:7px 10px !important;border-left:3px solid var(--ink);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--hair)}
+  .spec{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media (max-width:520px){.spec{grid-template-columns:1fr}}
+  .spec-item{padding:11px 0;border-bottom:1px solid var(--hair)} .spec-item.full{grid-column:1 / -1}
+  .spec-k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:3px}
+  .spec-v{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums} .spec-v.mut{color:#B4B4AE;font-weight:500}
+  .encl{margin-top:22px} .encl ul{margin:8px 0 0;padding:0;list-style:none}
+  .encl li{font-size:12.5px;padding:6px 0;border-bottom:1px dotted var(--hair);display:flex;gap:8px} .encl li::before{content:"—";color:var(--muted)}
+  .sheet-foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--ink);font-size:9.5px;color:var(--muted);line-height:1.6}
+  .sheet-foot .eho{display:flex;align-items:center;gap:6px;margin-top:8px;font-weight:600;letter-spacing:.04em;color:var(--ink-soft)}
+  .fit{border-top:1px solid var(--hair);margin-top:14px;padding-top:12px}
+  .fit-score{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:8px}
+  .fit-bar{flex:1;height:5px;border-radius:3px;background:var(--hair);overflow:hidden} .fit-bar i{display:block;height:100%;width:0;transition:width .2s}
+  .fit-row{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--hair);font-size:12.5px;line-height:1.45} .fit-row:last-child{border-bottom:0}
+  .fit-ic{width:16px;height:16px;border-radius:50%;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;line-height:1}
+  .fit-ic.ok{background:var(--ok)} .fit-ic.gap{background:var(--flag)} .fit-ic.info{background:#B4B4AE}
+  .fit-row .l{font-weight:600} .fit-row .d{color:var(--muted);display:block;font-weight:400;margin-top:1px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:12px 18px;border-radius:2px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .foot-legal{max-width:var(--maxw);margin:0 auto;padding:0 20px 40px;font-size:11px;color:var(--muted);line-height:1.6}
+  .brand-wrap{display:flex;align-items:center;gap:12px}
+  .brand-logo{height:22px;width:auto;max-width:120px;object-fit:contain;display:none}
+  .prof{background:var(--paper);border:1px solid var(--hair);border-radius:2px;margin-bottom:16px;overflow:hidden}
+  .prof-collapsed{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer}
+  .prof-chip-logo{height:30px;width:30px;object-fit:contain;border-radius:2px;display:none}
+  .prof-chip-txt{flex:1;min-width:0}
+  .prof-chip-txt strong{display:block;font-size:13px;font-weight:700}
+  .prof-chip-txt span{display:block;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #profForm{padding:16px 18px 18px}
+  .prof-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .prof-head strong{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .prof-logo-prev{height:44px;width:auto;max-width:140px;object-fit:contain;border:1px solid var(--hair);border-radius:2px;padding:4px;background:#fff;margin-right:10px;vertical-align:middle}
+  .prof-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .prof-actions .btn{padding:12px 10px;font-size:12px}
+  .sheet-logo{max-height:32px;max-width:110px;object-fit:contain;display:none}
+  .opt-tag{font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--muted);border:1px solid var(--hair);border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle}
+  .opt-field{border-style:dashed !important;background:transparent !important}
+  .prof-src{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .prof-src.on{color:var(--ok)}
+  .prof-src.on::before{content:"\2713";font-weight:800}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <div class="brand-wrap"><div class="wordmark">Compass</div><img id="brandLogo" class="brand-logo" alt=""></div>
+  <div class="status-chip" id="statusChip"><span class="dot"></span><span id="statusText">Add offer details</span></div>
+</div></div>
+<div class="switch"><div class="switch-track" role="tablist" aria-label="View">
+  <button role="tab" aria-selected="true" id="tabEdit" onclick="setView('edit')">Edit</button>
+  <button role="tab" aria-selected="false" id="tabPreview" onclick="setView('preview')">Preview</button>
+</div></div>
+<div class="grid">
+<div class="col-form" id="colForm">
+  <!-- AGENT PROFILE -->
+  <div class="prof" id="profPanel">
+    <div class="prof-collapsed" id="profCollapsed" style="display:none" onclick="profExpand()">
+      <img id="profChipLogo" class="prof-chip-logo" alt="">
+      <div class="prof-chip-txt"><strong id="profChipName">Your profile</strong><span id="profChipSub"></span></div>
+      <button type="button" class="prefill-skip" onclick="event.stopPropagation();profExpand()">Edit</button>
+    </div>
+    <div id="profForm">
+      <div class="prof-head"><strong id="profTitle">Your Profile</strong><span class="beta" style="background:#0A0A0A;color:#fff">Saved on device</span></div>
+      <div class="hint" id="profNote">Set this once — it prefills your agent details on every offer.</div>
+      <div class="field"><label class="lab" for="pfName">Name <span style="color:var(--flag)">*</span></label><input id="pfName" placeholder="How you go by — Dennis Wong" oninput="profDirty()" /></div>
+      <div class="field"><label class="lab" for="pfLicensedAs">Licensed as · if different</label><input id="pfLicensedAs" placeholder="Full legal name on the license" oninput="profDirty()" /><div class="hint" style="margin:6px 0 0">Used on compliance forms when your license name is spelled differently.</div></div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="pfLicense">License # <span style="color:var(--flag)">*</span></label><input id="pfLicense" placeholder="10401200000" oninput="profDirty()" /></div>
+        <div class="field"><label class="lab" for="pfLicState">License state <span style="color:var(--flag)">*</span></label><select id="pfLicState" onchange="onLicState();profDirty()"><option value="">Select…</option><option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>DC</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option></select></div>
+      </div>
+      <div class="field"><label class="lab" for="pfLicType">License type <span style="color:var(--flag)">*</span></label>
+        <select id="pfLicType" onchange="profDirty()"><option value="">Select a state first…</option></select>
+        <div class="hint" id="licTypeHint" style="margin:6px 0 0">Drives how you're identified on compliance forms and signatures.</div>
+      </div>
+      <div class="field"><label class="lab" for="pfBrokerage">Brokerage <span style="color:var(--flag)">*</span></label><input id="pfBrokerage" placeholder="Compass Greater NY LLC" oninput="profDirty()" /><div class="hint" style="margin:6px 0 0">Full legal brokerage name — not the DBA.</div></div>
+      <div class="sub-lab">Office address</div>
+      <div class="field"><label class="lab" for="pfAddr1">Address line 1</label><input id="pfAddr1" placeholder="1010 Northern Blvd" oninput="profDirty()" /></div>
+      <div class="field"><label class="lab" for="pfAddr2">Address line 2</label><input id="pfAddr2" placeholder="Suite 314" oninput="profDirty()" /></div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="pfCity">City</label><input id="pfCity" placeholder="Great Neck" oninput="profDirty()" /></div>
+        <div class="field"><label class="lab" for="pfState">State</label><input id="pfState" placeholder="NY" oninput="profDirty()" /></div>
+      </div>
+      <div class="field"><label class="lab" for="pfZip">ZIP</label><input id="pfZip" inputmode="numeric" placeholder="11021" oninput="profDirty()" /></div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="pfPhone">Mobile</label><input id="pfPhone" inputmode="tel" placeholder="(516) 555-0100" oninput="profDirty()" /></div>
+        <div class="field"><label class="lab" for="pfEmail">Email <span style="color:var(--flag)">*</span></label><input id="pfEmail" type="email" inputmode="email" placeholder="you@compass.com" oninput="profDirty()" /></div>
+      </div>
+      <div class="sub-lab">Headshot · optional</div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="pfHeadshotUrl">Image URL</label><input id="pfHeadshotUrl" placeholder="https://…" oninput="profLogoPreview();applyBranding()" /></div>
+        <div class="field"><label class="lab" for="pfHeadshotFile">…or upload</label><input id="pfHeadshotFile" type="file" accept="image/*" onchange="profImgUpload(this.files,'headshot')" /></div>
+      </div>
+      <div class="sub-lab">Team / personal logo · optional</div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="pfLogoUrl">Image URL</label><input id="pfLogoUrl" placeholder="https://…" oninput="profLogoPreview();applyBranding()" /></div>
+        <div class="field"><label class="lab" for="pfLogoFile">…or upload</label><input id="pfLogoFile" type="file" accept="image/*" onchange="profImgUpload(this.files,'logo')" /></div>
+      </div>
+      <div id="profLogoPrev" style="display:none;margin-bottom:12px"><img id="profHeadshotImg" class="prof-logo-prev" alt=""><img id="profLogoImg" class="prof-logo-prev" alt=""><button type="button" class="prefill-skip" onclick="profLogoClear()">Remove images</button></div>
+      <div class="inline-note" style="margin-bottom:12px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.3" stroke="#767671" stroke-width="1"/><path d="M7 6v4M7 4h.01" stroke="#767671" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>Brokerage branding stays dominant on all output. Your headshot/logo appears as a secondary mark.</span>
+      </div>
+      <div id="profErr" class="prefill-msg err" style="display:none"></div>
+      <div class="prof-actions">
+        <button type="button" class="btn btn-primary" onclick="profSave()">Save profile</button>
+        <button type="button" class="btn btn-ghost" onclick="profCopyLink()">Copy my link</button>
+        <button type="button" class="btn btn-ghost" onclick="profExport()">Export</button>
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('pfImport').click()">Import</button>
+      </div>
+      <input id="pfImport" type="file" accept="application/json,.json" style="display:none" onchange="profImport(this.files);this.value=''" />
+    </div>
+  </div>
+
+  <!-- 01 LISTING -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">01</span><span class="card-title">Listing</span></div>
+    <div class="card-body">
+      <div class="prefill" id="prefillBox">
+        <div class="prefill-head">
+          <label class="lab" for="listingUrl" style="margin:0">Prefill from Compass listing <span class="beta">Beta</span></label>
+          <button type="button" class="prefill-skip" onclick="hidePrefill()">Enter manually</button>
+        </div>
+        <div class="prefill-row">
+          <input id="listingUrl" placeholder="Paste a Compass listing link" onkeydown="if(event.key==='Enter'){event.preventDefault();resolveOrPrefill()}" />
+          <button type="button" class="prefill-btn" onclick="resolveOrPrefill()">Fill</button>
+        </div>
+        <div class="prefill-msg" id="prefillMsg">Beta · paste a Compass listing link to prefill address, MLS #, and agent — or just fill in the fields below.</div>
+      </div>
+      <div class="prefill-collapsed" id="prefillReopen" style="display:none">
+        <span>Manual entry</span>
+        <button type="button" class="prefill-reopen" onclick="showPrefill()"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L1.5 4.5 4 7M1.8 4.5H8a2.5 2.5 0 010 5H5" stroke="#0A0A0A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Use Compass link prefill (Beta)</button>
+      </div>
+      <div class="field"><label class="lab" for="addr">Property address <span style="color:var(--flag)">*</span></label><input id="addr" placeholder="123 Shore Rd, Manhasset, NY 11030" oninput="update()" /></div>
+      <div class="field">
+        <label class="lab" for="mlsNumber">OneKey MLS # <span style="color:var(--flag)">*</span></label>
+        <input id="mlsNumber" placeholder="1015334" oninput="update()" />
+        <label class="check" style="padding:8px 0 0"><input type="checkbox" id="mlsNA" onchange="update()"><span>Not applicable (off-market / not yet in MLS)</span></label>
+      </div>
+      <div class="sub-lab" style="margin-top:6px">Listing agent</div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="laName">Name</label><input id="laName" placeholder="Full name" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="laBrokerage">Brokerage <span style="color:var(--flag)">*</span></label><input id="laBrokerage" placeholder="Full legal brokerage name" oninput="update()" /></div>
+      </div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="laPhone">Phone</label><input id="laPhone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="laEmail">Email <span style="color:var(--flag)">*</span></label><input id="laEmail" type="email" inputmode="email" placeholder="routes the draft" oninput="update()" /></div>
+      </div>
+      <div class="hint">Compass in-house listings hide the email — enter it manually there.</div>
+      <div class="optrow"><div class="sub-lab" style="margin:0">Co-listing agent · optional</div><button type="button" class="prefill-skip" id="la2Toggle" onclick="toggleAlt('la2')">Add</button></div>
+      <div id="la2Fields" style="display:none">
+        <div class="row2 stack">
+          <div class="field"><label class="lab" for="la2Name">Name</label><input id="la2Name" placeholder="Second listing agent" oninput="update()" /></div>
+          <div class="field"><label class="lab" for="la2Email">Email</label><input id="la2Email" type="email" inputmode="email" placeholder="cc'd on the draft" oninput="update()" /></div>
+        </div>
+        <div class="field"><label class="lab" for="la2Phone">Phone</label><input id="la2Phone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 BUYER -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">02</span><span class="card-title">Buyer</span></div>
+    <div class="card-body">
+      <div class="field"><label class="lab" for="buyer">Buyer name(s)</label><input id="buyer" placeholder="Jane &amp; John Doe" oninput="update()" /></div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="buyerEmail">Buyer email</label><input id="buyerEmail" type="email" inputmode="email" placeholder="Optional" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="buyerPhone">Buyer phone</label><input id="buyerPhone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+      </div>
+      <div class="inline-note">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.3" stroke="#767671" stroke-width="1"/><path d="M7 6v4M7 4h.01" stroke="#767671" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>Only names, contact, and offer terms are used. No personal, demographic, or protected-class details enter any output.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 BUYER'S AGENT -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">03</span><span class="card-title">Buyer's Agent</span></div>
+    <div class="card-body">
+      <div class="optrow" style="margin-bottom:10px">
+        <span class="prof-src" id="agSrc">Not yet filled from profile</span>
+        <button type="button" class="prefill-btn" onclick="fillFromProfile()">Use my profile</button>
+      </div>
+      <div class="hint">Override any field if you're submitting on someone else's behalf.</div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="agName">Your name</label><input id="agName" placeholder="Buyer's agent" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="agEmail">Email</label><input id="agEmail" type="email" inputmode="email" placeholder="you@compass.com" oninput="update()" /></div>
+      </div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="agPhone">Mobile</label><input id="agPhone" inputmode="tel" placeholder="(516) 555-0100" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="agLic">License #</label><input id="agLic" placeholder="Optional" oninput="update()" /></div>
+      </div>
+      <div class="sub-lab">Office address</div>
+      <div class="field"><label class="lab" for="agAddr1">Address line 1</label><input id="agAddr1" placeholder="1010 Northern Blvd" oninput="update()" /></div>
+      <div class="field"><label class="lab" for="agAddr2">Address line 2</label><input id="agAddr2" placeholder="Suite 314" oninput="update()" /></div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="agCity">City</label><input id="agCity" placeholder="Great Neck" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="agState">State</label><input id="agState" placeholder="NY" oninput="update()" /></div>
+      </div>
+      <div class="field"><label class="lab" for="agZip">ZIP</label><input id="agZip" inputmode="numeric" placeholder="11021" oninput="update()" /></div>
+      <div class="optrow"><div class="sub-lab" style="margin:0">Co-agent · optional</div><button type="button" class="prefill-skip" id="coToggle" onclick="toggleAlt('co')">Add</button></div>
+      <div id="coFields" style="display:none">
+        <div class="field"><label class="lab" for="coName">Co-agent name</label><input id="coName" placeholder="Also represents the buyer" oninput="update()" /></div>
+        <div class="row2 stack">
+          <div class="field"><label class="lab" for="coEmail">Co-agent email</label><input id="coEmail" type="email" inputmode="email" placeholder="Optional" oninput="update()" /></div>
+          <div class="field"><label class="lab" for="coPhone">Co-agent phone</label><input id="coPhone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+        </div>
+        <div class="hint">Both agents represent the buyer; you (above) operate the tool and receive replies.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 OFFER TERMS -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">04</span><span class="card-title">Offer Terms</span></div>
+    <div class="card-body">
+      <div class="field"><label class="lab" for="price">Offer price <span style="color:var(--flag)">*</span></label><input id="price" inputmode="numeric" placeholder="$1,250,000" oninput="onMoney(this);update()" onblur="update()" /><div class="hint" id="listPriceHint" style="display:none;margin:6px 0 0"></div><div id="priceWarn" class="inline-note" style="display:none;border-color:#8A5A00;margin-top:8px"></div></div>
+      <div class="field"><label class="lab">Financing</label>
+        <div class="seg" id="finSeg">
+          <button type="button" aria-pressed="true" onclick="pk('fin',this,'Cash')">Cash</button>
+          <button type="button" onclick="pk('fin',this,'Conventional')">Conventional</button>
+          <button type="button" onclick="pk('fin',this,'FHA')">FHA</button>
+          <button type="button" onclick="pk('fin',this,'VA')">VA</button>
+          <button type="button" onclick="pk('fin',this,'Other')">Other</button>
+        </div>
+      </div>
+      <div class="field" id="finOtherWrap" style="display:none"><label class="lab" for="finOther">Financing note</label><input id="finOther" placeholder="or not applicable / discuss separately" oninput="update()" /></div>
+      <div class="row2" id="dpRow" style="display:none">
+        <div class="field"><label class="lab" for="dpPct">Down payment %</label><input id="dpPct" inputmode="decimal" placeholder="20" oninput="onDp('pct');update()" /></div>
+        <div class="field"><label class="lab" for="dpAmt">Down payment $</label><input id="dpAmt" inputmode="numeric" placeholder="$250,000" oninput="onDp('amt');update()" /></div>
+      </div>
+      <div class="field" id="balWrap" style="display:none">
+        <div class="lab-row"><label class="lab" for="balDue">Balance due at closing</label><button type="button" class="info-btn" onclick="tip('t_bal')">i</button></div>
+        <input id="balDue" inputmode="numeric" placeholder="Auto-calculated" oninput="onBal()" />
+        <div class="hint" id="balBreak" style="margin:6px 0 0"></div>
+        <button type="button" class="prefill-skip" id="balAutoBtn" style="display:none;margin-top:4px" onclick="balReset()">&#8635; Reset to auto</button>
+      </div>
+      <div class="tip" id="t_bal"><span class="tt">For training</span>The balance the buyer owes at closing beyond the down payment — i.e. the financed portion. Offer price &#8722; down payment. Sellers and their attorneys look for this to reconcile the deal; override if your contract states it differently.</div>
+      <div class="field">
+        <div class="lab-row"><label class="lab" for="buyerAgentComp">Buyer's broker compensation requested</label><button type="button" class="info-btn" onclick="tip('t_comp')">i</button></div>
+        <div style="display:flex;gap:8px">
+          <input id="buyerAgentComp" inputmode="decimal" placeholder="Optional — if applicable" oninput="update()" style="flex:1" />
+          <div class="seg" id="compUnitSeg">
+            <button type="button" aria-pressed="true" onclick="pk('compUnit',this,'%')">%</button>
+            <button type="button" onclick="pk('compUnit',this,'$')">$</button>
+          </div>
+        </div>
+        <div class="hint" style="margin:6px 0 0">Set the unit explicitly — no conversion is assumed.</div>
+      </div>
+      <div class="tip" id="t_comp"><span class="tt">For training</span>Since the 2024 NAR settlement, buyer's broker compensation isn't set by the listing or the MLS. It's paid to the buyer's <b>brokerage</b> — not the individual agent — and you may ask the <b>seller</b> to cover it as a term of the offer. It's negotiable and separate from the buyer's written agreement with you.</div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="escEnable" onchange="update()"><span>Include escalation clause</span></label>
+        <div class="lab-row" style="margin:2px 0 0"><button type="button" class="info-btn" onclick="tip('t_esc')">i</button><span style="font-size:11px;color:var(--muted)">What's an escalation clause?</span></div>
+      </div>
+      <div class="tip" id="t_esc"><span class="tt">For training</span>An escalation clause automatically raises the offer above competing bids, up to a stated cap. It signals seriousness — but many listings prohibit them, so confirm the guidelines before adding one.</div>
+      <div class="row2" id="escRow" style="display:none">
+        <div class="field"><label class="lab" for="escCap">Escalate up to $</label><input id="escCap" inputmode="numeric" placeholder="$1,300,000" oninput="onMoney(this);update()" /></div>
+        <div class="field"><label class="lab" for="escIncrement">Increment $</label><input id="escIncrement" inputmode="numeric" placeholder="$5,000" oninput="onMoney(this);update()" /></div>
+      </div>
+      <div class="field">
+        <div class="lab-row"><label class="lab" for="sellerConcession">Seller concession request</label><button type="button" class="info-btn" onclick="tip('t_conc')">i</button></div>
+        <input id="sellerConcession" inputmode="numeric" placeholder="Optional $" oninput="onMoney(this);update()" />
+      </div>
+      <div class="tip" id="t_conc"><span class="tt">For training</span>A seller concession is money credited to the buyer at closing (often toward closing costs). It reduces the seller's net proceeds, so listing agents evaluate your <b>net</b> offer — price minus concessions and any compensation asked of the seller.</div>
+      <div class="field">
+        <div class="lab-row"><label class="lab" for="netToSeller">Net to seller</label><button type="button" class="info-btn" onclick="tip('t_net')">i</button></div>
+        <input id="netToSeller" inputmode="numeric" placeholder="Auto-calculated from terms above" oninput="onNet()" />
+        <div class="hint" id="netBreak" style="margin:6px 0 0"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px">
+          <label class="check" style="padding:0"><input type="checkbox" id="netInclude" checked onchange="update()"><span>Include in offer output</span></label>
+          <button type="button" class="prefill-skip" id="netAutoBtn" style="display:none" onclick="netReset()">&#8635; Reset to auto</button>
+        </div>
+      </div>
+      <div class="tip" id="t_net"><span class="tt">For training</span>Net to seller &#8776; offer price &#8722; seller concessions &#8722; any buyer's broker compensation you're asking the seller to pay. Listing agents rank offers on <b>net</b>, not headline price — a clean lower price can beat a higher one loaded with credits. Auto-calculates; edit to override, or reset to auto.</div>
+      <div class="field">
+        <div class="lab-row"><label class="lab" for="inclusions">Inclusions</label><button type="button" class="info-btn" onclick="tip('t_incl')">i</button></div>
+        <input id="inclusions" placeholder="e.g. all appliances, window treatments" oninput="update()" />
+      </div>
+      <div class="tip" id="t_incl"><span class="tt">For training</span>Personal property the buyer expects to convey with the house — appliances (washer/dryer, refrigerator), window treatments, light fixtures, TV mounts, generator, pool/patio furniture, playsets. Naming them now prevents a walkthrough dispute later.</div>
+      <div class="field">
+        <div class="lab-row"><label class="lab" for="exclusions">Exclusions</label><button type="button" class="info-btn" onclick="tip('t_excl')">i</button></div>
+        <input id="exclusions" placeholder="e.g. dining room chandelier" oninput="update()" />
+      </div>
+      <div class="tip" id="t_excl"><span class="tt">For training</span>Items the buyer accepts will NOT convey, or is explicitly not asking for — typically a seller's heirloom chandelier, mounted art, or a specific appliance. Stating them signals you've read the listing carefully and reduces friction.</div>
+      <div class="field"><label class="lab" for="close">Target closing</label><input id="close" placeholder="On or about 09/15 or 45 days" oninput="update()" /></div>
+    </div>
+  </section>
+
+  <!-- 05 CONTINGENCIES -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">05</span><span class="card-title">Contingencies</span></div>
+    <div class="card-body">
+      <div class="sub">
+        <div class="sub-lab">Inspection</div>
+        <div class="seg" id="inspSeg">
+          <button type="button" aria-pressed="true" onclick="pk('insp',this,'Yes')">Yes</button>
+          <button type="button" onclick="pk('insp',this,'No')">No</button>
+          <button type="button" onclick="pk('insp',this,'Informational')">Informational</button>
+        </div>
+        <div class="field" id="inspDaysWrap" style="margin-top:9px"><label class="lab" for="inspDays">Inspection turnaround (days)</label><input id="inspDays" inputmode="numeric" placeholder="Optional" oninput="update()" /></div>
+      </div>
+      <div class="sub" id="mortCWrap">
+        <div class="lab-row"><div class="sub-lab" style="margin:0">Mortgage contingency</div><button type="button" class="info-btn" onclick="tip('t_mort')">i</button></div>
+        <div class="seg" id="mortCSeg" style="margin-top:6px">
+          <button type="button" aria-pressed="true" onclick="pk('mortC',this,'Yes')">Yes</button>
+          <button type="button" onclick="pk('mortC',this,'No')">No</button>
+        </div>
+        <div class="tip" id="t_mort" style="margin-top:9px"><span class="tt">For training</span>This lets the buyer cancel if their loan falls through. Waiving it makes the offer stronger but riskier for the buyer — only advise it with strong pre-approval or cash reserves.</div>
+        <div class="field" id="commitWrap" style="margin-top:9px">
+          <div class="lab-row"><label class="lab" for="commitDays">Mortgage commitment (days)</label><button type="button" class="info-btn" onclick="tip('t_commit')">i</button></div>
+          <input id="commitDays" inputmode="numeric" placeholder="e.g. 30" oninput="update()" />
+        </div>
+        <div class="tip" id="t_commit"><span class="tt">For training</span>The number of days the buyer has to secure a written mortgage commitment from the lender. Shorter = stronger (sellers want certainty sooner); 30–45 days is typical. Ask your lender what they can realistically hit before you commit to it.</div>
+      </div>
+      <div class="sub">
+        <div class="lab-row"><div class="sub-lab" style="margin:0">Appraisal contingency</div><button type="button" class="info-btn" onclick="tip('t_appr')">i</button></div>
+        <div class="seg" id="apprCSeg" style="margin-top:6px">
+          <button type="button" aria-pressed="true" onclick="pk('apprC',this,'Yes')">Yes</button>
+          <button type="button" onclick="pk('apprC',this,'No')">No</button>
+        </div>
+        <div class="tip" id="t_appr" style="margin-top:9px"><span class="tt">For training</span>Gap coverage is cash the buyer commits above the appraised value if the home appraises low. Offering it reassures sellers in competitive bids without fully waiving the appraisal.</div>
+        <div class="field" style="margin-top:9px"><label class="lab" for="apprGap">Gap coverage — buyer covers up to $</label><input id="apprGap" inputmode="numeric" placeholder="Optional" oninput="onMoney(this);update()" /></div>
+      </div>
+      <div class="sub">
+        <div class="lab-row"><div class="sub-lab" style="margin:0">Sale-of-home contingency</div><button type="button" class="info-btn" onclick="tip('t_sale')">i</button></div>
+        <div class="seg" id="saleCSeg" style="margin-top:6px">
+          <button type="button" onclick="pk('saleC',this,'Yes')">Yes</button>
+          <button type="button" aria-pressed="true" onclick="pk('saleC',this,'No')">No</button>
+        </div>
+        <div class="tip" id="t_sale" style="margin-top:9px"><span class="tt">For training</span>This ties the purchase to the buyer selling their current home. Sellers generally prefer offers without it — and if the buyer's home is already listed, say so; it's a meaningful reassurance.</div>
+        <div id="saleOnMarketWrap" style="display:none;margin-top:9px">
+          <div class="sub-lab">Home currently on the market?</div>
+          <div class="seg" id="saleOnMarketSeg">
+            <button type="button" onclick="pk('saleOnMarket',this,'Yes')">Yes</button>
+            <button type="button" aria-pressed="true" onclick="pk('saleOnMarket',this,'No')">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 OFFER EXPIRATION -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">06</span><span class="card-title">Offer Expiration</span><span class="spacer"></span><span class="soon-chip" style="background:var(--panel);color:var(--muted);border:1px solid var(--hair)">Optional</span></div>
+    <div class="card-body">
+      <div class="hint">A deadline for the seller to respond. Leave blank if the offer has no fixed expiration.</div>
+      <div class="row2 stack">
+        <div class="field"><label class="lab" for="expDate">Offer valid through (date)</label><input id="expDate" type="date" oninput="update()" /></div>
+        <div class="field"><label class="lab" for="expTime">Offer valid through (time) <span class="opt-tag">optional</span></label><input id="expTime" type="time" class="opt-field" oninput="update()" /><div class="hint" style="margin:6px 0 0">Leave blank — a date alone is valid.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 ADDITIONAL CONTACTS -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">07</span><span class="card-title">Additional Contacts</span></div>
+    <div class="card-body">
+      <div id="lenderWrap">
+        <div class="optrow">
+          <label class="check" style="padding:0"><input type="checkbox" id="lenderInclude" onchange="update()"><span>Include lender</span></label>
+          <button type="button" class="info-btn" onclick="tip('t_lender')">i</button>
+        </div>
+        <div class="tip" id="t_lender"><span class="tt">For training</span>Naming a reachable loan officer lets the listing agent verify the pre-approval in one call. On a financed offer it's one of the cheapest credibility signals you can give.</div>
+        <div id="lenderFields" style="display:none">
+          <div class="row2 stack">
+            <div class="field"><label class="lab" for="lenderCompany">Mortgage company</label><input id="lenderCompany" placeholder="Company name" oninput="update()" /></div>
+            <div class="field"><label class="lab" for="lenderName">Loan officer</label><input id="lenderName" placeholder="Individual's name" oninput="update()" /></div>
+          </div>
+          <div class="row2 stack">
+            <div class="field"><label class="lab" for="lenderPhone">Phone</label><input id="lenderPhone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+            <div class="field"><label class="lab" for="lenderEmail">Email</label><input id="lenderEmail" type="email" inputmode="email" placeholder="Optional" oninput="update()" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="optrow">
+        <label class="check" style="padding:0"><input type="checkbox" id="attyInclude" checked onchange="update()"><span>Include buyer's attorney</span></label>
+        <button type="button" class="info-btn" onclick="tip('t_atty')">i</button>
+      </div>
+      <div class="tip" id="t_atty"><span class="tt">For training</span>In New York, attorneys handle the contract and closing. Naming one ready to review signals a serious, closable buyer. Uncheck to opt out if not yet retained.</div>
+      <div id="attyFields">
+        <div class="row2 stack">
+          <div class="field"><label class="lab" for="attyFirm">Firm</label><input id="attyFirm" placeholder="Firm name" oninput="update()" /></div>
+          <div class="field"><label class="lab" for="attyName">Attorney</label><input id="attyName" placeholder="Individual's name" oninput="update()" /></div>
+        </div>
+        <div class="row2 stack">
+          <div class="field"><label class="lab" for="attyPhone">Phone</label><input id="attyPhone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+          <div class="field"><label class="lab" for="attyEmail">Email</label><input id="attyEmail" type="email" inputmode="email" placeholder="Optional" oninput="update()" /></div>
+        </div>
+      </div>
+      <div class="optrow">
+        <label class="check" style="padding:0"><input type="checkbox" id="titleInclude" onchange="update()"><span>Include title company</span></label>
+      </div>
+      <div id="titleFields" style="display:none">
+        <div class="row2 stack">
+          <div class="field"><label class="lab" for="titleCompany">Title company</label><input id="titleCompany" placeholder="Company name" oninput="update()" /></div>
+          <div class="field"><label class="lab" for="titleRep">Title representative</label><input id="titleRep" placeholder="Individual's name" oninput="update()" /></div>
+        </div>
+        <div class="row2 stack">
+          <div class="field"><label class="lab" for="titlePhone">Phone</label><input id="titlePhone" inputmode="tel" placeholder="Optional" oninput="update()" /></div>
+          <div class="field"><label class="lab" for="titleEmail">Email</label><input id="titleEmail" type="email" inputmode="email" placeholder="Optional" oninput="update()" /></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 CONTEXT -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">08</span><span class="card-title">Context</span></div>
+    <div class="card-body">
+      <div class="sub">
+        <div class="sub-lab">Buyer has viewed the property</div>
+        <div class="seg" id="viewedSeg">
+          <button type="button" aria-pressed="true" onclick="pk('viewed',this,'Yes')">Yes</button>
+          <button type="button" onclick="pk('viewed',this,'No')">No</button>
+        </div>
+        <label class="check" style="padding:8px 0 0"><input type="checkbox" id="viewedInclude" onchange="update()"><span>Show this in the offer output</span></label>
+      </div>
+      <div class="sub">
+        <div class="sub-lab">Buyer has offers on other properties · optional</div>
+        <div class="seg" id="otherOffersSeg">
+          <button type="button" onclick="pk('otherOffers',this,'Yes')">Yes</button>
+          <button type="button" onclick="pk('otherOffers',this,'No')">No</button>
+          <button type="button" aria-pressed="true" onclick="pk('otherOffers',this,'—')">Prefer not to say</button>
+        </div>
+        <label class="check" style="padding:8px 0 0"><input type="checkbox" id="otherOffersInclude" onchange="update()"><span>Show this in the offer output</span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 DOCUMENTS -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">09</span><span class="card-title">Documents</span><span class="spacer"></span><button type="button" class="info-btn" onclick="tip('t_docs')">i</button></div>
+    <div class="card-body">
+      <div class="tip" id="t_docs"><span class="tt">For training</span>Submit a complete, organized package. A missing pre-approval, proof of funds, or executed lead-paint disclosure is the fastest way to weaken an otherwise strong offer. The list below doubles as a checklist — each attached document ticks its box.</div>
+      <label class="lab">Upload method</label>
+      <div class="seg" id="uploadModeSeg" style="margin-bottom:12px">
+        <button type="button" aria-pressed="true" onclick="setUploadMode('files',this)">Single files</button>
+        <button type="button" onclick="setUploadMode('package',this)">Combined PDF</button>
+      </div>
+      <div id="docControls"></div>
+      <input id="fileIn" type="file" multiple style="display:none" onchange="onPick(this.files);this.value=''" />
+      <div id="assemblyWrap" style="display:none">
+        <label class="lab" style="margin-top:10px">When attaching</label>
+        <div class="seg" id="assemblySeg" style="margin-bottom:10px">
+          <button type="button" aria-pressed="true" onclick="setAssembly('separate',this)">Keep separate</button>
+          <button type="button" onclick="setAssembly('merge',this)">Merge into one PDF</button>
+        </div>
+        <div id="mergeWrap" style="display:none">
+          <div class="field"><label class="lab" for="mergeName">Merged file name</label><input id="mergeName" placeholder="Offer Documents - ..." oninput="S.mergeNameEdited=true" /></div>
+          <button class="doc-dl" style="width:100%" onclick="mergeDocsOnly()">Download merged documents (PDF)</button>
+          <div class="hint" style="margin:8px 0 0">Merges just your documents. To include the offer summary too, use the offer package below.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 PACKAGE -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">10</span><span class="card-title">Package &amp; Send</span></div>
+    <div class="card-body">
+      <div class="actions">
+        <button class="btn btn-primary" id="btnPackage" onclick="makePackagePDF()" disabled>Download combined offer package</button>
+        <button class="btn btn-ghost" id="btnPdf" onclick="makeSummaryPDF()" disabled>Offer summary only</button>
+        <button class="btn btn-ghost" id="btnMail" onclick="openMail()" disabled>Open email draft</button>
+        <button class="btn btn-ghost" id="btnCopy" onclick="copyEmail()" disabled>Copy email text</button>
+      </div>
+      <div class="inline-note" style="margin-top:14px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.3" stroke="#767671" stroke-width="1"/><path d="M7 6v4M7 4h.01" stroke="#767671" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>The draft opens in your mail app with the listing agent, subject, and body prefilled. Attach the PDFs and documents there before sending.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 COVER LETTER (coming soon) -->
+  <section class="card">
+    <div class="card-head"><span class="card-num">11</span><span class="card-title">Cover Letter</span><span class="spacer"></span><button type="button" class="info-btn" onclick="tip('t_letter')">i</button><span class="soon-chip">Coming soon</span></div>
+    <div class="tip" id="t_letter" style="margin:0 18px 12px"><span class="tt">For training</span>A well-built cover letter frames the <b>terms</b> — certainty of close, clean contingencies, flexibility on dates — in a subtle, polished way that makes the seller feel confident, not courted. It never describes the buyer personally: buyer "love letters" invite Fair Housing exposure by surfacing protected characteristics, which is why this is agent-authored and terms-only.</div>
+    <div class="soon-teaser">An agent-authored, Fair Housing–compliant cover letter — generated from your offer terms with a positioning coach. In the works.</div>
+  </section>
+</div>
+
+<!-- PREVIEW -->
+<div class="col-preview hide-mobile" id="colPreview">
+  <div class="sheet" id="sheetSummary">
+    <div class="sheet-head"><div style="display:flex;align-items:center;gap:10px"><div class="sheet-mark">Compass</div><img id="pvLogo" class="sheet-logo" alt=""></div><div class="sheet-eyebrow">Offer Summary<br/><span id="pvDate"></span></div></div>
+    <div class="sheet-rule"></div>
+    <div class="hdr-lab">Listing property</div>
+    <h1 class="sheet-addr" id="pvAddr">Property address</h1>
+    <div class="hdr-grid">
+      <div><div class="hdr-lab">Buyer</div><div class="hdr-val" id="pvBuyer">—</div></div>
+      <div><div class="hdr-lab">Prepared by</div><div class="hdr-val" id="pvSub">—</div></div>
+    </div>
+    <div class="sheet-price-lab">Offer price</div>
+    <div class="sheet-price" id="pvPrice">—</div>
+    <div class="sheet-priceref" id="pvPriceRef" style="display:none"></div>
+    <div class="spec" id="pvSpec"></div>
+    <div class="spec-title" id="pvContTitle" style="margin-top:24px">Contingencies</div>
+    <div class="spec" id="pvCont"></div>
+    <div class="encl" id="pvEncl" style="display:none"><div class="spec-title" style="margin-top:24px">Attachments included in this memo</div><ul id="pvEnclList"></ul></div>
+    <div class="sheet-foot">
+      <div id="pvContact"></div>
+      <div>This summary is provided for discussion purposes and does not constitute a binding offer or contract. All terms subject to a fully executed agreement.</div>
+      <div class="eho"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 7v11H3V10l9-7z" stroke="#3A3A38" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 21v-6h6v6" stroke="#3A3A38" stroke-width="1.4"/></svg>Equal Housing Opportunity</div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="foot-legal">Internal working tool for Compass agents. Helps keep offer presentation focused on objective terms, consistent with Fair Housing law and NAR Code of Ethics guidance; it is not legal advice. Verify all figures against the executed documents before presentation.</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const S={fin:'Cash',insp:'Yes',mortC:'Yes',apprC:'Yes',saleC:'No',saleOnMarket:'No',viewed:'Yes',otherOffers:'—',uploadMode:'files',assembly:'separate',compUnit:'%',balOverride:null,mergeNameEdited:false,listPrice:0,netOverride:false};
+let DOCS=[], PENDING_TYPE=null, PROF={};
+
+/* helpers */
+function num(v){if(v==null)return 0;const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isNaN(n)?0:n;}
+function fmtMoney(n){if(!n)return '';return '$'+Math.round(n).toLocaleString('en-US');}
+function val(id){const e=$(id);return e?e.value.trim():'';}
+function shortAddr(a){if(!a)return '';return a.split(',')[0].trim();}
+function firstName(s){if(!s)return '';return s.trim().split(/[\s&,]+/)[0];}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function tip(id){const t=$(id);if(t)t.classList.toggle('show');}
+function toggleAlt(k){const f=$(k+'Fields'),b=$(k+'Toggle');const open=f.style.display!=='none';f.style.display=open?'none':'block';if(b)b.textContent=open?'Add':'Hide';}
+
+/* segmented + money */
+function pk(key,btn,v){S[key]=v;[...btn.parentElement.children].forEach(b=>b.setAttribute('aria-pressed', b===btn?'true':'false'));update();}
+function onMoney(el){const n=num(el.value);el.value=n?fmtMoney(n):'';}
+function onDp(src){const price=num(val('price'));if(!price)return;if(src==='pct'){const p=num(val('dpPct'));$('dpAmt').value=p?fmtMoney(price*p/100):'';}else{const a=num(val('dpAmt'));$('dpPct').value=a?(Math.round(a/price*1000)/10):'';}}
+function compDollars(s,price,unit){if(!s)return 0;const n=num(s);if(!n)return 0;return (unit||S.compUnit)==='%'?price*n/100:n;}
+function compLabel(s,unit){if(!s)return '';const n=num(s);if(!n)return '';unit=unit||S.compUnit;return unit==='%'?(n+'% of offer price'):fmtMoney(n);}
+function onNet(){S.netOverride=true;onMoney($('netToSeller'));update();}
+function autoBal(d){return Math.max(0, (d.price||0) - (d.dpAmt||0));}
+function onBal(){onMoney($('balDue'));S.balOverride=num($('balDue').value)||0;update();}
+function balReset(){S.balOverride=null;update();}
+function netReset(){S.netOverride=false;update();}
+
+/* ---------- documents ---------- */
+const DOC_TYPES=['Signed Offer','Pre-Approval Letter','Proof of Funds','Escalation Clause Authorization','Lead Paint Disclosure','Offer Package'];
+const DOC_ORDER=['Signed Offer','Pre-Approval Letter','Proof of Funds','Escalation Clause Authorization','Lead Paint Disclosure','Offer Package'];
+const SLOTS=[
+  {t:'Signed Offer',note:'required'},
+  {t:'Pre-Approval Letter',note:'if financing'},
+  {t:'Proof of Funds',note:'recommended'},
+  {t:'Escalation Clause Authorization',note:'if escalating'},
+  {t:'Lead Paint Disclosure',note:'pre-1978 homes'}
+];
+const SLOT_TYPES=SLOTS.map(s=>s.t);
+function guessType(name){const n=name.toLowerCase();
+  if(/lead|lpd|paint/.test(n))return 'Lead Paint Disclosure';
+  if(/escalat/.test(n))return 'Escalation Clause Authorization';
+  if(/pre.?app|approval|commit/.test(n))return 'Pre-Approval Letter';
+  if(/proof|pof|fund|bank|statement/.test(n))return 'Proof of Funds';
+  if(/package|combined/.test(n))return 'Offer Package';
+  return 'Signed Offer';}
+function cleanName(type){const a=shortAddr(val('addr'))||'Offer';return (a+' - '+type).replace(/\s+/g,' ').trim();}
+function mergeDocName(){const a=shortAddr(val('addr'))||'Offer';return a+' - Offer Documents';}
+function extOf(name){const m=/\.[a-z0-9]+$/i.exec(name||'');return m?m[0]:'';}
+function slotFor(type){return SLOT_TYPES.includes(type)?type:'Signed Offer';}
+function addFiles(list,forced){[...list].forEach(f=>{const type=forced||guessType(f.name);DOCS.push({file:f,orig:f.name,type,name:cleanName(type)+extOf(f.name)});});renderDocControls();update();}
+function onPick(list){addFiles(list,PENDING_TYPE);PENDING_TYPE=null;}
+function pickFor(type){PENDING_TYPE=type;$('fileIn').click();}
+function rmDoc(i){DOCS.splice(i,1);renderDocControls();update();}
+function setDocType(i,t){DOCS[i].type=t;DOCS[i].name=cleanName(t)+extOf(DOCS[i].orig);renderDocControls();update();}
+function setDocName(i,v){DOCS[i].name=v;}
+function dlDoc(i){const d=DOCS[i];const url=URL.createObjectURL(d.file);const a=document.createElement('a');a.href=url;a.download=d.name||d.orig;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function hasDoc(type){return DOCS.some(d=>d.type===type);}
+
+function fileRow(i){const d=DOCS[i];
+  return `<div class="filerow"><input value="${esc(d.name)}" oninput="setDocName(${i},this.value)" aria-label="File name"/><span class="fileicon" title="${esc(d.orig)}">${esc(d.orig)}</span><button class="fbtn" title="Download renamed" onclick="dlDoc(${i})">&#8595;</button><button class="fbtn" title="Remove" onclick="rmDoc(${i})">&times;</button></div>`;}
+
+function renderDocControls(){
+  const w=$('docControls');w.innerHTML='';
+  if(S.uploadMode==='package'){
+    let html=`<div class="drop" id="drop" data-drop="Offer Package" tabindex="0" role="button" aria-label="Upload combined PDF" onclick="pickFor('Offer Package')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickFor('Offer Package')}"><strong>Add your combined PDF</strong><span>One prepared offer PDF — or drop it here</span></div>`;
+    DOCS.forEach((d,i)=>{const opts=DOC_TYPES.map(t=>`<option${t===d.type?' selected':''}>${t}</option>`).join('');
+      html+=`<div class="doc"><div class="doc-top"><div class="doc-orig">${esc(d.orig)}</div><button class="doc-x" title="Remove" onclick="rmDoc(${i})">&times;</button></div><div class="doc-grid"><input value="${esc(d.name)}" oninput="setDocName(${i},this.value)" aria-label="File name"/><select onchange="setDocType(${i},this.value)" aria-label="Type">${opts}</select></div><button class="doc-dl" onclick="dlDoc(${i})">Download renamed</button></div>`;});
+    w.innerHTML=html;
+  }else{
+    let html='<div class="slots">';
+    SLOTS.forEach(s=>{
+      const idxs=DOCS.map((d,i)=>({d,i})).filter(x=>slotFor(x.d.type)===s.t);
+      const on=idxs.length>0;
+      html+=`<div class="slot" data-drop="${s.t}"><div class="slot-head"><span class="slot-tick${on?' on':''}">${on?'&#10003;':''}</span><span class="slot-name">${s.t}${s.note?`<span class="req">${s.note}</span>`:''}</span><button type="button" class="slot-add" onclick="pickFor('${s.t}')">${on?'Add more':'Add'}</button></div>`;
+      if(idxs.length){html+='<div class="slot-files">'+idxs.map(x=>fileRow(x.i)).join('')+'</div>';}
+      html+='</div>';
+    });
+    html+='</div>';
+    w.innerHTML=html;
+  }
+  // drag/drop binding for any drop target just rendered
+  w.querySelectorAll('[data-drop]').forEach(el=>{
+    const type=el.getAttribute('data-drop');
+    ['dragover','dragenter'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.add('drag');}));
+    ['dragleave','dragend','drop'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.remove('drag');}));
+    el.addEventListener('drop',e=>{if(e.dataTransfer&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files,type);});
+  });
+  $('assemblyWrap').style.display=DOCS.length?'block':'none';
+}
+function setUploadMode(m,btn){S.uploadMode=m;[...btn.parentElement.children].forEach(b=>b.setAttribute('aria-pressed',b===btn?'true':'false'));renderDocControls();}
+function setAssembly(m,btn){S.assembly=m;[...btn.parentElement.children].forEach(b=>b.setAttribute('aria-pressed',b===btn?'true':'false'));$('mergeWrap').style.display=m==='merge'?'block':'none';if(m==='merge'&&!S.mergeNameEdited)$('mergeName').value=mergeDocName();}
+
+async function addFileToPdf(out,file){
+  const buf=await file.arrayBuffer();const t=(file.type||'').toLowerCase();const n=file.name.toLowerCase();
+  try{
+    if(t.includes('pdf')||n.endsWith('.pdf')){const src=await PDFLib.PDFDocument.load(buf);const pgs=await out.copyPages(src,src.getPageIndices());pgs.forEach(p=>out.addPage(p));return true;}
+    if(/image\/(png|jpe?g)/.test(t)||/\.(png|jpe?g)$/.test(n)){const img=(t.includes('png')||n.endsWith('.png'))?await out.embedPng(buf):await out.embedJpg(buf);const pg=out.addPage([612,792]);const m=36,mw=540,mh=720;let{width:w,height:h}=img.scale(1);const r=Math.min(mw/w,mh/h,1);w*=r;h*=r;pg.drawImage(img,{x:(612-w)/2,y:(792-h)/2,width:w,height:h});return true;}
+  }catch(e){}
+  return false;}
+function dlBytes(bytes,name){const blob=new Blob([bytes],{type:'application/pdf'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+async function mergeDocsOnly(){
+  if(!DOCS.length){toast('Add documents first');return;}
+  toast('Merging…');const out=await PDFLib.PDFDocument.create();out.setTitle(mergeDocName());
+  const ordered=[...DOCS].sort((a,b)=>DOC_ORDER.indexOf(a.type)-DOC_ORDER.indexOf(b.type));
+  let skipped=0;for(const d of ordered){const ok=await addFileToPdf(out,d.file);if(!ok)skipped++;}
+  if(out.getPageCount()===0){toast('Nothing merged (DOCX/encrypted skipped)');return;}
+  const bytes=await out.save();dlBytes(bytes,(val('mergeName')||mergeDocName())+'.pdf');
+  toast(skipped?`Merged · ${skipped} skipped`:'Merged');}
+
+/* ---------- read form ---------- */
+function data(){
+  const attyInc=$('attyInclude').checked, titleInc=$('titleInclude').checked, lenderInc=$('lenderInclude').checked;
+  const _price=num(val('price')), _conc=num(val('sellerConcession')), _comp=compDollars(val('buyerAgentComp'),_price,S.compUnit);
+  const _netAuto=Math.max(0,_price-_conc-_comp);
+  const _net=S.netOverride?num(val('netToSeller')):_netAuto;
+  const _dpAmt=num(val('dpAmt'));
+  const _balAuto=Math.max(0,_price-_dpAmt);
+  const _bal=(S.balOverride!=null)?S.balOverride:_balAuto;
+  return {
+    balDue:_bal, balAuto:_balAuto,
+    addr:val('addr'),mlsNumber:val('mlsNumber'),mlsNA:$('mlsNA').checked,
+    laName:val('laName'),laPhone:val('laPhone'),laEmail:val('laEmail'),laBrokerage:val('laBrokerage'),
+    la2Name:val('la2Name'),la2Email:val('la2Email'),la2Phone:val('la2Phone'),
+    buyer:val('buyer'),buyerEmail:val('buyerEmail'),buyerPhone:val('buyerPhone'),
+    compUnit:S.compUnit,
+    agName:val('agName'),agEmail:val('agEmail'),agPhone:val('agPhone'),agLic:val('agLic'),
+    agAddr1:val('agAddr1'),agAddr2:val('agAddr2'),agCity:val('agCity'),agState:val('agState'),agZip:val('agZip'),
+    coName:val('coName'),coEmail:val('coEmail'),coPhone:val('coPhone'),
+    price:num(val('price')),fin:S.fin,finOther:val('finOther'),buyerAgentComp:val('buyerAgentComp'),
+    dpPct:num(val('dpPct')),dpAmt:num(val('dpAmt')),sellerConcession:num(val('sellerConcession')),
+    escEnable:$('escEnable').checked,escCap:num(val('escCap')),escIncrement:num(val('escIncrement')),
+    inclusions:val('inclusions'),exclusions:val('exclusions'),
+    close:val('close'),expDate:val('expDate'),expTime:val('expTime'),
+    insp:S.insp,inspDays:num(val('inspDays')),mortC:S.mortC,commitDays:num(val('commitDays')),
+    apprC:S.apprC,apprGap:num(val('apprGap')),saleC:S.saleC,saleOnMarket:S.saleOnMarket,
+    viewed:S.viewed,viewedInclude:$('viewedInclude').checked,otherOffers:S.otherOffers,otherOffersInclude:$('otherOffersInclude').checked,
+    lenderInclude:lenderInc,lenderCompany:lenderInc?val('lenderCompany'):'',lenderName:lenderInc?val('lenderName'):'',lenderPhone:lenderInc?val('lenderPhone'):'',lenderEmail:lenderInc?val('lenderEmail'):'',
+    attyInclude:attyInc,attyName:attyInc?val('attyName'):'',attyFirm:attyInc?val('attyFirm'):'',attyEmail:attyInc?val('attyEmail'):'',attyPhone:attyInc?val('attyPhone'):'',
+    titleInclude:titleInc,titleCompany:titleInc?val('titleCompany'):'',titleRep:titleInc?val('titleRep'):'',titlePhone:titleInc?val('titlePhone'):'',titleEmail:titleInc?val('titleEmail'):'',
+    netInclude:$('netInclude').checked, net:_net, netAuto:_netAuto, netComp:_comp, sellerConcessionAmt:_conc
+  };
+}
+const cash=d=>d.fin==='Cash';
+function officeLine(d){return [d.agAddr1,d.agAddr2,[d.agCity,d.agState].filter(Boolean).join(', '),d.agZip].filter(Boolean).join(', ');}
+
+/* ---------- shared term rows ---------- */
+function offerRows(d){
+  const t=[],c=[];
+  if(d.mlsNA)t.push(['MLS #','Not applicable']);else if(d.mlsNumber)t.push(['MLS #',d.mlsNumber]);
+  let fin=d.fin;if(d.fin==='Other'&&d.finOther)fin=d.finOther;t.push(['Financing',fin]);
+  if(!cash(d)){
+    if(d.dpAmt||d.dpPct){const p=d.dpPct?` (${d.dpPct}%)`:'';t.push(['Down payment',(d.dpAmt?fmtMoney(d.dpAmt):'—')+p]);}
+  }
+  if(d.price&&!cash(d)&&d.balDue)t.push(['Balance due at closing',fmtMoney(d.balDue)]);
+  if(d.buyerAgentComp&&num(d.buyerAgentComp))t.push(['Request for seller to pay buyer\'s broker compensation',compLabel(d.buyerAgentComp,d.compUnit)]);
+  if(d.escEnable&&d.escCap)t.push(['Escalation','Up to '+fmtMoney(d.escCap)+(d.escIncrement?' · +'+fmtMoney(d.escIncrement):'')]);
+  if(d.sellerConcession)t.push(['Seller concession',fmtMoney(d.sellerConcession)]);
+  if(d.netInclude&&d.net)t.push(['Net to seller',fmtMoney(d.net)]);
+  if(d.close)t.push(['Target closing date',d.close]);
+  if(d.lenderInclude&&!cash(d)&&(d.lenderCompany||d.lenderName)){
+    const line=[d.lenderCompany,d.lenderName].filter(Boolean).join(' \u2014 ');
+    const cc=[d.lenderPhone,d.lenderEmail].filter(Boolean).join(' · ');
+    t.push(['Lender',line+(cc?' · '+cc:''),true]);}
+  if(d.attyInclude&&(d.attyFirm||d.attyName)){
+    const line=[d.attyFirm,d.attyName].filter(Boolean).join(' \u2014 ');
+    const cc=[d.attyPhone,d.attyEmail].filter(Boolean).join(' · ');
+    t.push(["Buyer's attorney",line+(cc?' · '+cc:''),true]);}
+  if(d.titleInclude&&(d.titleCompany||d.titleRep)){
+    const line=[d.titleCompany,d.titleRep].filter(Boolean).join(' \u2014 ');
+    const cc=[d.titlePhone,d.titleEmail].filter(Boolean).join(' · ');
+    t.push(['Title company',line+(cc?' · '+cc:''),true]);}
+  if(d.viewedInclude)t.push(['Buyer viewed',d.viewed]);
+  if(d.otherOffersInclude&&d.otherOffers!=='—')t.push(['Bidding elsewhere',d.otherOffers]);
+  if(d.inclusions)t.push(['Inclusions',d.inclusions,true]);
+  t.push(['Exclusions',d.exclusions||'None requested',true]);
+  if(d.expDate){let e=d.expDate;if(d.expTime)e+=' '+d.expTime;t.push(['Offer valid through',e,true]);}
+  c.push(['Inspection',d.insp+(d.inspDays?` · ${d.inspDays}d`:'')]);
+  c.push(['Mortgage contingency',cash(d)?'N/A (cash)':d.mortC+(d.mortC==='Yes'&&d.commitDays?` · ${d.commitDays}d`:'')]);
+  c.push(['Appraisal contingency',d.apprC+(d.apprGap?` · gap ${fmtMoney(d.apprGap)}`:'')]);
+  c.push(['Sale-of-home',d.saleC+(d.saleC==='Yes'?` · ${d.saleOnMarket==='Yes'?'on market':'not yet listed'}`:'')]);
+  return {terms:t,cont:c};
+}
+function fillSpec(el,rows){const STRONG=['Net to seller'];el.innerHTML='';rows.forEach(([k,v,full])=>{const e=document.createElement('div');e.className='spec-item'+(full?' full':'')+(STRONG.includes(k)?' strong':'');e.innerHTML=`<div class="spec-k">${esc(k)}</div><div class="spec-v${v?'':' mut'}">${esc(v)||'—'}</div>`;el.appendChild(e);});}
+function ready(d){return !!(d.addr&&d.price&&d.laEmail&&d.laBrokerage&&d.agName&&(d.mlsNA||d.mlsNumber));}
+
+/* ---------- render ---------- */
+function update(){
+  const d=data();
+  $('dpRow').style.display=cash(d)?'none':'grid';
+  $('finOtherWrap').style.display=d.fin==='Other'?'block':'none';
+  $('lenderWrap').style.display=cash(d)?'none':'block';
+  $('commitWrap').style.display=(cash(d)||d.mortC!=='Yes')?'none':'block';
+  $('mortCWrap').style.display=cash(d)?'none':'block';
+  $('escRow').style.display=d.escEnable?'grid':'none';
+  $('saleOnMarketWrap').style.display=d.saleC==='Yes'?'block':'none';
+  $('attyFields').style.display=d.attyInclude?'block':'none';
+  $('titleFields').style.display=d.titleInclude?'block':'none';
+  $('lenderFields').style.display=d.lenderInclude?'block':'none';
+  $('inspDaysWrap').style.display=(d.insp==='No')?'none':'block';
+  $('balWrap').style.display=cash(d)?'none':'block';
+  if(!cash(d)){
+    const bEl=$('balDue');
+    if(S.balOverride==null&&document.activeElement!==bEl)bEl.value=d.balAuto?fmtMoney(d.balAuto):'';
+    $('balAutoBtn').style.display=(S.balOverride!=null)?'inline-flex':'none';
+    $('balBreak').textContent=d.price?`${fmtMoney(d.price)} offer \u2212 ${fmtMoney(d.dpAmt||0)} down${S.balOverride!=null?' \u00b7 overridden':''}`:'';
+  }
+  $('mlsNumber').disabled=d.mlsNA;if(d.mlsNA)$('mlsNumber').value='';
+  // list price: grey placeholder + reference, never auto-filled
+  const priceEl=$('price');
+  if(S.listPrice){priceEl.placeholder=fmtMoney(S.listPrice);}
+  const lph=$('listPriceHint'),pw=$('priceWarn');
+  if(S.listPrice&&d.price){const diff=d.price-S.listPrice;const pct=S.listPrice?Math.round(diff/S.listPrice*1000)/10:0;
+    lph.style.display='block';lph.textContent=`List ${fmtMoney(S.listPrice)} · ${diff===0?'at list':(diff>0?'+':'')+fmtMoney(diff)+` (${pct>0?'+':''}${pct}%)`}`;
+    if(Math.abs(pct)>10){pw.style.display='flex';pw.innerHTML=`<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5l5.5 10H1.5L7 1.5z" stroke="#8A5A00" stroke-width="1.1" stroke-linejoin="round"/><path d="M7 6v2.2M7 10h.01" stroke="#8A5A00" stroke-width="1.3" stroke-linecap="round"/></svg><span style="color:#8A5A00">This offer is <b>${pct>0?'+':''}${pct}%</b> ${pct>0?'above':'below'} the $${S.listPrice.toLocaleString('en-US')} list price — more than 10%. Double-check the figure for a typo.</span>`;}
+    else pw.style.display='none';}
+  else if(S.listPrice){lph.style.display='block';lph.textContent=`List price ${fmtMoney(S.listPrice)} · shown in grey for reference`;pw.style.display='none';}
+  else{lph.style.display='none';pw.style.display='none';}
+  // net to seller
+  if(!S.netOverride){$('netToSeller').value=d.price?fmtMoney(d.netAuto):'';}
+  const nb=$('netBreak'), nbtn=$('netAutoBtn');
+  if(!d.price){nb.textContent='Enter an offer price to calculate.';}
+  else if(S.netOverride){nb.textContent='Manual override — auto-calc paused.';}
+  else{nb.textContent=`${fmtMoney(d.price)}${d.sellerConcessionAmt?' − '+fmtMoney(d.sellerConcessionAmt)+' concession':''}${d.netComp?' − '+fmtMoney(d.netComp)+' buyer\'s broker':''} = ${fmtMoney(d.netAuto)}`;}
+  nbtn.style.display=S.netOverride?'inline':'none';
+  // preview
+  $('pvDate').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  $('pvAddr').textContent=d.addr||'Property address';
+  $('pvBuyer').textContent=d.buyer||'—';
+  $('pvSub').textContent=[d.agName,PROF.brokerage].filter(Boolean).join(' · ')||'—';
+  const pv=$('pvPrice');
+  if(d.price){pv.textContent=fmtMoney(d.price);pv.classList.remove('mut');}
+  else if(S.listPrice){pv.textContent=fmtMoney(S.listPrice);pv.classList.add('mut');}
+  else{pv.textContent='—';pv.classList.add('mut');}
+  const pr=$('pvPriceRef');
+  if(!d.price&&S.listPrice){pr.style.display='block';pr.textContent='List price · offer not yet entered';}
+  else pr.style.display='none';
+  const {terms:_t,cont:_c}=offerRows(d);
+  fillSpec($('pvSpec'),_t);fillSpec($('pvCont'),_c);
+  if(DOCS.length){$('pvEncl').style.display='block';$('pvEnclList').innerHTML=DOCS.map(x=>`<li>${esc(x.name)}</li>`).join('');}
+  else $('pvEncl').style.display='none';
+  const c=[];if(d.agName){c.push(d.agName+(PROF.brokerage?' · '+PROF.brokerage:''));}
+  const _off=officeLine(d);if(_off)c.push(_off);
+  const l2=[d.agPhone,d.agEmail].filter(Boolean).join(' · ');if(l2)c.push(l2);
+  if(d.coName)c.push('Co-agent: '+d.coName+([d.coPhone,d.coEmail].filter(Boolean).length?' · '+[d.coPhone,d.coEmail].filter(Boolean).join(' · '):''));
+  if(d.agLic)c.push('Lic. #'+d.agLic);
+  $('pvContact').innerHTML=c.map(x=>`<div>${esc(x)}</div>`).join('')||'<div>Buyer&#39;s agent</div>';
+  const r=ready(d);const chip=$('statusChip');
+  if(r){chip.classList.add('ready');$('statusText').textContent='Ready to package';}
+  else{chip.classList.remove('ready');$('statusText').textContent=!d.addr?'Add property address':(!d.mlsNumber&&!d.mlsNA)?'Add MLS # (or mark N/A)':!d.price?'Add offer price':!d.agName?'Add your name':!d.laBrokerage?'Add listing brokerage':!d.laEmail?'Add listing agent email':'Add offer details';}
+  ['btnPackage','btnPdf','btnMail','btnCopy'].forEach(id=>$(id).disabled=!r);
+}
+
+/* ---------- prefill ---------- */
+const RESOLVER_URL="";
+function hidePrefill(){$('prefillBox').style.display='none';$('prefillReopen').style.display='flex';}
+function showPrefill(){$('prefillBox').style.display='block';$('prefillReopen').style.display='none';setMsg('Beta · paste a Compass listing link to prefill address, MLS #, and agent — or just fill in the fields below.');$('listingUrl').focus();}
+function setMsg(t,cls){const m=$('prefillMsg');m.textContent=t;m.className='prefill-msg'+(cls?' '+cls:'');}
+function applyPrefill(p){
+  let filled=0;const set=(id,v)=>{if(v&&$(id)&&!$(id).value){$(id).value=v;filled++;}};
+  set('addr',p.address);set('mlsNumber',p.mlsNumber);
+  if(p.listPrice){S.listPrice=num(p.listPrice);filled++;} // reference only — price field left empty
+  const la=p.listingAgent||{};set('laName',la.name);set('laEmail',la.email);set('laPhone',la.phone);set('laBrokerage',la.brokerage);
+  const la2=p.listingAgent2||p.coListingAgent||p.altListingAgent;
+  if(la2&&(la2.name||la2.email||la2.phone)){$('la2Fields').style.display='block';const b=$('la2Toggle');if(b)b.textContent='Hide';set('la2Name',la2.name);set('la2Email',la2.email);set('la2Phone',la2.phone);}
+  const pb=p.preparedBy||{};set('agName',pb.name);set('agEmail',pb.email);set('agPhone',pb.phone);set('agLic',pb.license);
+  update();return filled;
+}
+async function resolveOrPrefill(){
+  const raw=val('listingUrl');if(!raw){setMsg('Paste a Compass listing link, or enter details below.');return;}
+  if(/^\s*\{/.test(raw)){try{const p=JSON.parse(raw);const n=applyPrefill(p);setMsg(n?`Prefilled ${n} field${n>1?'s':''} — check them below.`:'Nothing new to fill — enter details below.',n?'ok':'');return;}catch(e){setMsg('That looked like JSON but did not parse. Enter details below.','err');return;}}
+  const isCompass=/compass\.com\/listing\//i.test(raw);
+  if(!RESOLVER_URL){setMsg(isCompass?'Saved the link. Auto-fill from Compass links needs the resolver connected — enter the fields below for now.':'That is not a Compass listing link. Enter the fields below.',isCompass?'':'err');update();return;}
+  try{setMsg('Fetching listing…');const res=await fetch(RESOLVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:raw})});if(!res.ok)throw 0;const p=await res.json();const n=applyPrefill(p);setMsg(n?`Prefilled ${n} field${n>1?'s':''} — verify below.`:'Could not read that listing — enter details below.',n?'ok':'');}
+  catch(e){setMsg('Could not fetch automatically — enter the fields below.','err');update();}
+}
+function decodePayload(s){try{return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))));}catch(e){try{return JSON.parse(decodeURIComponent(s));}catch(_){return null;}}}
+function loadFromUrl(){const h=new URLSearchParams(location.hash.slice(1));const q=new URLSearchParams(location.search);const p=h.get('p')||q.get('p');if(p){const obj=decodePayload(p);if(obj){const n=applyPrefill(obj);if(n){setMsg(`Prefilled ${n} field${n>1?'s':''} from link.`,'ok');return;}}}const listing=q.get('listing');if(listing){$('listingUrl').value=listing;resolveOrPrefill();}}
+
+/* ---------- agent profile (shared identity module, spec v0.1) ---------- */
+/* License types by state. NY verified; others use the common salesperson/broker split
+   and are marked provisional pending a per-state table (see spec: open question). */
+const LIC_TYPES={
+  NY:['Licensed Real Estate Salesperson','Licensed Associate Real Estate Broker','Licensed Real Estate Broker'],
+  NJ:['Real Estate Salesperson','Real Estate Broker-Salesperson','Real Estate Broker'],
+  CT:['Real Estate Salesperson','Real Estate Broker'],
+  FL:['Real Estate Sales Associate','Real Estate Broker Associate','Real Estate Broker'],
+  CA:['Real Estate Salesperson','Real Estate Broker'],
+  _default:['Real Estate Salesperson','Real Estate Broker Associate','Real Estate Broker']
+};
+function licTypesFor(st){return LIC_TYPES[st]||LIC_TYPES._default;}
+function onLicState(keep){const st=val('pfLicState');const sel=$('pfLicType');const cur=keep||sel.value;
+  const list=licTypesFor(st);
+  sel.innerHTML='<option value="">Select…</option>'+list.map(t=>`<option${t===cur?' selected':''}>${t}</option>`).join('');
+  const hint=$('licTypeHint');
+  hint.textContent=(st&&!LIC_TYPES[st])?'Common license types shown — verify the exact designation for '+st+'.':"Drives how you're identified on compliance forms and signatures.";}
+const PROF_KEY='compassOffer.profile.v1';
+function storageOK(){try{const k='__t';localStorage.setItem(k,'1');localStorage.removeItem(k);return true;}catch(e){return false;}}
+function encodePayload(o){try{return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}catch(e){return '';}}
+function setProfNote(t){const n=$('profNote');if(n)n.textContent=t;}
+function profExpand(){$('profForm').style.display='block';$('profCollapsed').style.display='none';}
+function profCollapse(){$('profForm').style.display='none';$('profCollapsed').style.display='flex';}
+function profReadForm(){return {v:1,name:val('pfName'),licensedAs:val('pfLicensedAs'),license:val('pfLicense'),licState:val('pfLicState'),licType:val('pfLicType'),brokerage:val('pfBrokerage'),addr1:val('pfAddr1'),addr2:val('pfAddr2'),city:val('pfCity'),state:val('pfState'),zip:val('pfZip'),phone:val('pfPhone'),email:val('pfEmail'),headshotUrl:val('pfHeadshotUrl'),logoUrl:val('pfLogoUrl'),headshotData:PROF.headshotData||'',logoData:PROF.logoData||''};}
+function profOfficeLine(p){p=p||PROF;return [p.addr1,p.addr2,[p.city,p.state].filter(Boolean).join(', '),p.zip].filter(Boolean).join(' · ');}
+function profMissing(p){const req=[['name','Name'],['license','License #'],['licState','License state'],['licType','License type'],['brokerage','Brokerage'],['email','Email']];return req.filter(([k])=>!p[k]).map(([,l])=>l);}
+function profDirty(){const e=$('profErr');if(e)e.style.display='none';}
+function profWriteForm(p){$('pfName').value=p.name||'';$('pfLicensedAs').value=p.licensedAs||'';$('pfLicense').value=p.license||'';$('pfLicState').value=p.licState||'';onLicState(p.licType||'');$('pfLicType').value=p.licType||'';$('pfBrokerage').value=p.brokerage||'';$('pfAddr1').value=p.addr1||'';$('pfAddr2').value=p.addr2||'';$('pfCity').value=p.city||'';$('pfState').value=p.state||'';$('pfZip').value=p.zip||'';$('pfPhone').value=p.phone||'';$('pfEmail').value=p.email||'';$('pfHeadshotUrl').value=p.headshotUrl||'';$('pfLogoUrl').value=p.logoUrl||'';PROF.headshotData=p.headshotData||'';PROF.logoData=p.logoData||'';profLogoPreview();}
+function profChip(){$('profChipName').textContent=PROF.name||'Your profile';$('profChipSub').textContent=[PROF.brokerage,profOfficeLine()].filter(Boolean).join(' · ');const src=PROF.headshotData||PROF.headshotUrl||PROF.logoData||PROF.logoUrl,cl=$('profChipLogo');if(src){cl.src=src;cl.style.display='block';cl.onerror=()=>{cl.style.display='none';};}else cl.style.display='none';}
+function fillFromProfile(){if(!PROF||!PROF.name){toast('Set up your profile first');profExpand();window.scrollTo({top:0,behavior:'smooth'});return;}
+  const set=(id,v)=>{$(id).value=v||'';};
+  set('agName',PROF.name);set('agEmail',PROF.email);set('agPhone',PROF.phone);set('agLic',PROF.license);
+  set('agAddr1',PROF.addr1);set('agAddr2',PROF.addr2);set('agCity',PROF.city);set('agState',PROF.state);set('agZip',PROF.zip);
+  markAgSrc(true);update();toast('Filled from your profile');}
+function markAgSrc(on){const b=$('agSrc');if(!b)return;b.classList.toggle('on',!!on);b.textContent=on?('From your profile'+(PROF.name?' · '+PROF.name:'')):'Not yet filled from profile';}
+function applyProfileToOffer(){const set=(id,v)=>{if(v!=null&&v!=='')$(id).value=v;};markAgSrc(!!PROF.name);set('agName',PROF.name);set('agEmail',PROF.email);set('agPhone',PROF.phone);set('agLic',PROF.license);set('agAddr1',PROF.addr1);set('agAddr2',PROF.addr2);set('agCity',PROF.city);set('agState',PROF.state);set('agZip',PROF.zip);}
+function applyBranding(){const src=PROF.logoData||val('pfLogoUrl')||PROF.logoUrl||PROF.headshotData||val('pfHeadshotUrl')||PROF.headshotUrl;['brandLogo','pvLogo'].forEach(id=>{const el=$(id);if(!el)return;if(src){el.src=src;el.style.display='inline-block';el.onerror=()=>{el.style.display='none';};}else el.style.display='none';});}
+function profSave(){const p=profReadForm();const miss=profMissing(p);const e=$('profErr');
+  if(miss.length){e.textContent='Required to save: '+miss.join(', ');e.style.display='block';toast('Complete the required fields');return;}
+  e.style.display='none';PROF=p;try{if(storageOK())localStorage.setItem(PROF_KEY,JSON.stringify(PROF));}catch(err){}applyProfileToOffer();applyBranding();profChip();update();profCollapse();toast(storageOK()?'Profile saved on this device':'Profile set for this session');}
+function profLoad(){try{const raw=storageOK()&&localStorage.getItem(PROF_KEY);if(raw)PROF=JSON.parse(raw)||{};}catch(e){PROF={};}
+  if(PROF&&PROF.name){profWriteForm(PROF);applyProfileToOffer();applyBranding();profChip();profCollapse();}
+  else{$('profTitle').textContent='Set up your profile';profExpand();}}
+function profFromHash(){try{const h=new URLSearchParams(location.hash.slice(1));const a=h.get('a');if(!a)return false;const obj=decodePayload(a);if(!obj)return false;PROF=Object.assign({},PROF,obj);profWriteForm(PROF);applyProfileToOffer();applyBranding();profChip();profExpand();$('profTitle').textContent='Confirm your profile';setProfNote('Loaded from a shared link — review and Save to keep it on this device.');return true;}catch(e){return false;}}
+function profCopyLink(){const p=profReadForm();const share={v:1,name:p.name,licensedAs:p.licensedAs,license:p.license,licState:p.licState,licType:p.licType,brokerage:p.brokerage,addr1:p.addr1,addr2:p.addr2,city:p.city,state:p.state,zip:p.zip,phone:p.phone,email:p.email,headshotUrl:p.headshotUrl,logoUrl:p.logoUrl};const link=location.origin+location.pathname+'#a='+encodePayload(share);(navigator.clipboard?navigator.clipboard.writeText(link):Promise.reject()).then(()=>toast('Personalized link copied')).catch(()=>{const t=document.createElement('textarea');t.value=link;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Personalized link copied');});}
+function profExport(){const p=profReadForm();const blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=(p.name?p.name.replace(/\s+/g,'-'):'agent')+'-profile.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function profImport(files){if(!files||!files[0])return;const r=new FileReader();r.onload=()=>{try{const p=JSON.parse(r.result);PROF=p||{};profWriteForm(PROF);profSave();toast('Profile imported');}catch(e){toast('Could not read that file');}};r.readAsText(files[0]);}
+function profLogoPreview(){const hs=PROF.headshotData||val('pfHeadshotUrl'),lg=PROF.logoData||val('pfLogoUrl');const w=$('profLogoPrev'),hi=$('profHeadshotImg'),li=$('profLogoImg');
+  if(hs){hi.src=hs;hi.style.display='inline-block';hi.onerror=()=>{hi.style.display='none';};}else hi.style.display='none';
+  if(lg){li.src=lg;li.style.display='inline-block';li.onerror=()=>{li.style.display='none';};}else li.style.display='none';
+  w.style.display=(hs||lg)?'block':'none';}
+function profImgUpload(files,kind){if(!files||!files[0])return;const r=new FileReader();r.onload=()=>{if(kind==='headshot')PROF.headshotData=r.result;else PROF.logoData=r.result;profLogoPreview();applyBranding();};r.readAsDataURL(files[0]);}
+function profLogoClear(){PROF.logoData='';PROF.headshotData='';$('pfLogoUrl').value='';$('pfHeadshotUrl').value='';if($('pfLogoFile'))$('pfLogoFile').value='';if($('pfHeadshotFile'))$('pfHeadshotFile').value='';profLogoPreview();applyBranding();}
+function urlToDataURL(url){return new Promise((res,rej)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);res(c.toDataURL('image/png'));}catch(e){rej(e);}};img.onerror=rej;img.src=url;});}
+async function logoForPdf(){if(PROF.logoData)return PROF.logoData;if(PROF.headshotData)return PROF.headshotData;const u=PROF.logoUrl||val('pfLogoUrl')||PROF.headshotUrl||val('pfHeadshotUrl');if(u){try{return await urlToDataURL(u);}catch(e){return null;}}return null;}
+
+/* ---------- PDF ---------- */
+function drawSummary(doc,d,logo){
+  const W=doc.internal.pageSize.getWidth(),M=54;let y=64;
+  doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setCharSpace(3);doc.text('COMPASS',M,y);doc.setCharSpace(0);
+  if(logo){try{const ip=doc.getImageProperties(logo);const lh=20,lw=Math.min(120,ip.width*lh/ip.height);doc.addImage(logo,ip.fileType||'PNG',M+98,y-15,lw,lh);}catch(e){}}
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(120);
+  doc.text('OFFER SUMMARY',W-M,y-4,{align:'right'});doc.text(new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),W-M,y+8,{align:'right'});
+  doc.setTextColor(10);y+=14;doc.setDrawColor(10);doc.setLineWidth(1);doc.line(M,y,W-M,y);y+=26;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(130);doc.setCharSpace(1.2);doc.text('LISTING PROPERTY',M,y);doc.setCharSpace(0);y+=16;
+  doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(10);doc.text(d.addr||'Property address',M,y,{maxWidth:W-M*2});y+=26;
+  const half=(W-M*2)/2;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(130);doc.setCharSpace(1.2);
+  doc.text('BUYER',M,y);doc.text('PREPARED BY',M+half,y);doc.setCharSpace(0);y+=13;
+  doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(10);
+  doc.text(d.buyer||'—',M,y,{maxWidth:half-12});
+  doc.text([d.agName,PROF.brokerage].filter(Boolean).join(' · ')||'—',M+half,y,{maxWidth:half-12});
+  y+=14;doc.setDrawColor(220);doc.setLineWidth(.5);doc.line(M,y,W-M,y);y+=24;
+  doc.setFontSize(8);doc.setTextColor(120);doc.setCharSpace(1.5);doc.text('OFFER PRICE',M,y);doc.setCharSpace(0);doc.setTextColor(10);y+=20;
+  doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(d.price?fmtMoney(d.price):(S.listPrice?fmtMoney(S.listPrice)+' (list)':'—'),M,y);y+=30;
+  const {terms,cont}=offerRows(d);const colW=(W-M*2)/2;let col=0;
+  function block(title,rows){if(!rows.length)return;if(y>720){doc.addPage();y=64;}
+    if(title){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(10);doc.setCharSpace(1.5);doc.text(title,M,y);doc.setCharSpace(0);
+      doc.setDrawColor(10);doc.setLineWidth(1);doc.line(M,y+6,W-M,y+6);y+=22;}
+    col=0;
+    rows.forEach(([k,v,full])=>{if(y>740){doc.addPage();y=64;}const x=full?M:(M+col*colW);const w=full?W-M*2:colW-12;
+      const isNet=(k==='Net to seller');
+      if(isNet){doc.setFillColor(244,244,242);doc.rect(x-6,y-11,w+12,32,'F');doc.setFillColor(10,10,10);doc.rect(x-6,y-11,2.5,32,'F');}
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(isNet?10:130);doc.text(String(k).toUpperCase(),x,y);
+      doc.setFont('helvetica','bold');doc.setFontSize(isNet?13:11);doc.setTextColor(10);doc.text(String(v||'—'),x,y+13,{maxWidth:w});
+      if(full){y+=30;col=0;}else{if(col===1){y+=34;col=0;}else col=1;}});
+    if(col===1)y+=34;y+=12;}
+  block('',terms);y+=8;block('CONTINGENCIES',cont);
+  if(DOCS.length){if(y>720){doc.addPage();y=64;}y+=6;doc.setFontSize(8);doc.setTextColor(120);doc.setCharSpace(1.5);doc.text('ATTACHMENTS INCLUDED IN THIS MEMO',M,y);doc.setCharSpace(0);doc.setTextColor(10);y+=16;doc.setFont('helvetica','normal');doc.setFontSize(10);DOCS.forEach(x=>{doc.setTextColor(120);doc.text('—',M,y);doc.setTextColor(10);doc.text(x.name,M+14,y,{maxWidth:W-M*2-14});y+=16;});}
+  let fy=760;doc.setDrawColor(10);doc.setLineWidth(1);doc.line(M,fy,W-M,fy);fy+=14;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(90);
+  const c=[];if(d.agName){c.push(d.agName+(PROF.brokerage?' · '+PROF.brokerage:''));}
+  const _off=officeLine(d);if(_off)c.push(_off);
+  const l2=[d.agPhone,d.agEmail].filter(Boolean).join('  ·  ');if(l2)c.push(l2);
+  if(d.coName)c.push('Co-agent: '+d.coName);
+  c.push('This summary is for discussion purposes and is not a binding offer. Equal Housing Opportunity.');
+  c.forEach(t=>{doc.text(t,M,fy,{maxWidth:W-M*2});fy+=11;});
+}
+async function makeSummaryPDF(){const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});const logo=await logoForPdf();drawSummary(doc,data(),logo);doc.save((shortAddr(val('addr'))||'Offer')+' - Offer Summary.pdf');toast('Summary PDF saved');}
+async function makePackagePDF(){
+  const d=data();toast('Building package…');
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});const logo=await logoForPdf();drawSummary(doc,d,logo);
+  const out=await PDFLib.PDFDocument.create();out.setTitle((shortAddr(d.addr)||'Offer')+' - Offer Package');
+  const sum=await PDFLib.PDFDocument.load(doc.output('arraybuffer'));const sp=await out.copyPages(sum,sum.getPageIndices());sp.forEach(p=>out.addPage(p));
+  const ordered=[...DOCS].sort((a,b)=>DOC_ORDER.indexOf(a.type)-DOC_ORDER.indexOf(b.type));
+  let skipped=0;for(const dd of ordered){const ok=await addFileToPdf(out,dd.file);if(!ok)skipped++;}
+  const bytes=await out.save();dlBytes(bytes,(shortAddr(d.addr)||'Offer')+' - Offer Package.pdf');
+  toast(skipped?`Package saved · ${skipped} doc(s) skipped`:'Offer package saved');
+}
+
+/* ---------- email ---------- */
+function emailParts(){
+  const d=data();const a=shortAddr(d.addr)||'the property';
+  const subj=`Offer — ${d.addr||a}${d.price?' — '+fmtMoney(d.price):''}`;
+  const L=[];L.push(`Hi${d.laName?' '+firstName(d.laName):''},`);L.push('');
+  L.push(`Please find our offer for ${d.addr||a} on behalf of ${d.buyer||'my client'}.`);L.push('');
+  const {terms,cont}=offerRows(d);
+  terms.forEach(([k,v])=>{if(v)L.push(`• ${k}: ${v}`);});
+  if(cont.length){L.push('');L.push('Contingencies:');cont.forEach(([k,v])=>{if(v)L.push(`• ${k}: ${v}`);});}
+  L.push('');
+  if(DOCS.length){L.push('Enclosed:');DOCS.forEach(x=>L.push(`• ${x.name}`));L.push('');}
+  L.push('Happy to discuss. Thank you for the consideration.');L.push('');
+  let sig=d.agName||'';if(PROF.brokerage)sig+=`\n${PROF.brokerage}`;
+  const _off=officeLine(d);if(_off)sig+='\n'+_off;
+  const sl=[d.agPhone,d.agEmail].filter(Boolean).join(' · ');if(sl)sig+='\n'+sl;
+  if(d.coName)sig+=`\nCo-agent: ${d.coName}`+([d.coPhone,d.coEmail].filter(Boolean).length?' · '+[d.coPhone,d.coEmail].filter(Boolean).join(' · '):'');
+  if(d.agLic)sig+=`\nLic. #${d.agLic}`;
+  L.push(sig);
+  const cc=[d.la2Email,d.coEmail,d.agEmail].filter(Boolean);
+  return {to:d.laEmail,cc,subj,body:L.join('\n')};
+}
+function openMail(){const p=emailParts();const q=[`subject=${encodeURIComponent(p.subj)}`,`body=${encodeURIComponent(p.body)}`];if(p.cc.length)q.push(`cc=${encodeURIComponent(p.cc.join(','))}`);location.href=`mailto:${encodeURIComponent(p.to)}?${q.join('&')}`;}
+function copyEmail(){const p=emailParts();const txt=`To: ${p.to}\n${p.cc.length?'Cc: '+p.cc.join(', ')+'\n':''}Subject: ${p.subj}\n\n${p.body}`;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Email copied')).catch(()=>{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Email copied');});}
+
+/* ---------- view + init ---------- */
+function setView(v){const e=v==='edit';$('tabEdit').setAttribute('aria-selected',e?'true':'false');$('tabPreview').setAttribute('aria-selected',e?'false':'true');$('colForm').classList.toggle('hide-mobile',!e);$('colPreview').classList.toggle('hide-mobile',e);}
+(function(){
+  setProfNote(storageOK()?'Set this once — it prefills your agent details on every offer, saved on this device.':'Heads up: this in-app preview can’t save to your device. Use Copy my link or Export to keep your profile — a hosted copy remembers you automatically.');
+  profLoad();
+  profFromHash();
+  renderDocControls();
+  if(window.matchMedia('(max-width:920px)').matches)setView('edit');
+  loadFromUrl();
+  update();
+})();
+</script>
+</body>
+</html>
